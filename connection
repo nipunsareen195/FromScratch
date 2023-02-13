@@ -1,0 +1,381 @@
+package p2p
+
+import (
+	"bufio"
+	"context"
+	"fmt"
+	"io"
+	"log"
+	"strconv"
+
+	"github.com/libp2p/go-libp2p"
+	"github.com/libp2p/go-libp2p/core/crypto"
+	"github.com/libp2p/go-libp2p/core/host"
+	"github.com/libp2p/go-libp2p/core/network"
+	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/libp2p/go-libp2p/core/peerstore"
+
+	"github.com/multiformats/go-multiaddr"
+)
+
+var maxblockNumber = 200
+var blockNumber = 100
+
+func HandleStream(s network.Stream) {
+	log.Println(" 1   Got a new stream!")
+
+	// Create a buffer stream for non blocking read and write.
+	rw := bufio.NewReadWriter(bufio.NewReader(s), bufio.NewWriter(s))
+
+	go ReadData1(rw)
+	go WriteData1(rw, "")
+
+	// stream 's' will stay open until you close it (or the other side closes it).
+}
+
+func HandleStream2(s network.Stream) {
+	log.Println("2  Got a new stream!")
+
+	// Create a buffer stream for non blocking read and write.
+	// rw := bufio.NewReadWriter(bufio.NewReader(s), bufio.NewWriter(s))
+
+	// go ReadData2(rw)
+	// go WriteData2(rw, "")
+
+	// stream 's' will stay open until you close it (or the other side closes it).
+}
+
+// func ReadData(rw *bufio.ReadWriter) {
+// 	fmt.Println("Read 0")
+// 	for {
+// 		str, _ := rw.ReadString('\n')
+// 		fmt.Println("Read 0.1")
+
+// 		if str == "" {
+// 			return
+// 		}
+// 		if str != "\n" {
+
+// 			fmt.Printf("\x1b[32m%s\x1b[0m> ", str)
+
+// 		}
+
+// 	}
+// }
+
+// func WriteData(rw *bufio.ReadWriter, rw2 *bufio.ReadWriter, multiAddressStr string, blockHeight int) {
+
+// 	fmt.Println("write 0")
+
+// 	sendData := strconv.Itoa(blockHeight)
+
+// 	fmt.Println("send block height")
+// 	rw.WriteString(fmt.Sprintf("%s\n", sendData))
+
+// 	rw.Flush()
+
+// 	fmt.Println(multiAddressStr)
+// 	rw2.WriteString(fmt.Sprintf("%s+", multiAddressStr))
+
+// 	rw2.Flush()
+
+// }
+
+// func ReadData1(rw *bufio.ReadWriter) {
+// 	fmt.Println("Read 1")
+
+// 	for {
+// 		str, _ := rw.ReadString('\n')
+// 		fmt.Println("Read 1.1")
+
+// 		// str11 := "+"
+// 		// byte_arr11 := []byte(str11)
+
+// 		// fmt.Println(byte_arr11)
+
+// 		// bytes1, err := rw.ReadString(byte_arr11[0])
+// 		// if err != nil {
+// 		// 	println(err)
+// 		// }
+
+// 		// fmt.Println("reading bytes")
+// 		// fmt.Println(strings.Split(bytes1, "+")[0])
+
+// 		if str == "" {
+// 			return
+// 		}
+// 		if str != "\n" {
+
+// 			fmt.Println("reading block number")
+// 			fmt.Printf("\x1b[32m%s\x1b[0m> ", str)
+
+// 		}
+
+// 	}
+// }
+
+// func WriteData1(rw *bufio.ReadWriter, block_header string) {
+
+// 	fmt.Println("Write 1")
+
+// 	if block_header != "" {
+// 		fmt.Println("Write 1.1")
+// 		fmt.Println("sending block header ")
+
+// 		rw.WriteString(fmt.Sprintf("%s\n", block_header))
+// 		rw.Flush()
+// 	}
+
+// }
+
+// func ReadData2(rw *bufio.ReadWriter) {
+// 	fmt.Println("Read 2")
+
+// 	for {
+// 		str, _ := rw.ReadString('\n')
+// 		fmt.Println("Read 2.1")
+
+// 		str11 := "+"
+// 		byte_arr11 := []byte(str11)
+
+// 		fmt.Println(byte_arr11)
+
+// 		bytes1, err := rw.ReadString(byte_arr11[0])
+// 		if err != nil {
+// 			println(err)
+// 		}
+
+// 		fmt.Println("reading bytes")
+// 		fmt.Println(strings.Split(bytes1, "+")[0])
+
+// 		if str == "" {
+// 			return
+// 		}
+// 		if str != "\n" {
+
+// 			fmt.Println("reading block number")
+// 			fmt.Printf("\x1b[32m%s\x1b[0m> ", str)
+
+// 		}
+
+// 	}
+// }
+
+// func WriteData2(rw *bufio.ReadWriter, block_header string) {
+
+// 	fmt.Println("Write 2")
+
+// 	if block_header != "" {
+// 		fmt.Println("Write 2.1")
+// 		fmt.Println("sending block header ")
+
+// 		rw.WriteString(fmt.Sprintf("%s\n", block_header))
+// 		rw.Flush()
+// 	}
+
+// }
+
+func ReadData(rw *bufio.ReadWriter) {
+	for {
+		str, _ := rw.ReadString('\n')
+
+		if str == "" {
+			return
+		}
+		if str != "\n" {
+
+			fmt.Println("recived block header ")
+			fmt.Println("block header is: ")
+			fmt.Printf("\x1b[32m%s\x1b[0m> ", str)
+			fmt.Println("storing block header to our db")
+			fmt.Println("-----------------")
+			rw.Flush()
+
+			if blockNumber != maxblockNumber {
+				blockNumber = blockNumber + 1
+				WriteData(rw, blockNumber)
+			}
+
+		}
+
+	}
+}
+
+func WriteData(rw *bufio.ReadWriter, blockHeight int) {
+
+	fmt.Println("geting height of this node")
+	fmt.Println("current height of node is ")
+	fmt.Println(blockHeight)
+	fmt.Println("sending height to other node")
+
+	fmt.Println("-----------------")
+
+	sendData := strconv.Itoa(blockHeight)
+
+	rw.WriteString(fmt.Sprintf("%s\n", sendData))
+
+	str := "Linuxhint"
+	byte_arr := []byte(str)
+
+	for i := 0; i < len(byte_arr); i++ {
+		rw.WriteByte(byte_arr[i])
+	}
+
+	rw.Flush()
+
+}
+
+func ReadData1(rw *bufio.ReadWriter) {
+
+	for {
+		str, _ := rw.ReadString('\n')
+
+		// byte1, err := rw.ReadByte()
+		// if err != nil {
+		// 	println(err)
+		// }
+
+		// fmt.Println(byte1)
+
+		// bytes1 := rw.ReadBytes()
+
+		if str == "" {
+			return
+		}
+		if str != "\n" {
+
+			fmt.Println("recived block number from a node")
+			fmt.Println("block nummber is: ")
+			fmt.Printf("\x1b[32m%s\x1b[0m> ", str)
+
+			fmt.Println("fetching block headers form this node")
+
+			block_header := "block header of " + str
+			fmt.Println("block header in string is :")
+			fmt.Println(block_header)
+
+			fmt.Println("sending block header to the other node ")
+
+			fmt.Println("-----------------")
+
+			WriteData1(rw, block_header)
+		}
+
+	}
+}
+
+func WriteData1(rw *bufio.ReadWriter, block_header string) {
+
+	if block_header != "" {
+		fmt.Println("sending block header ")
+
+		rw.WriteString(fmt.Sprintf("%s\n", block_header))
+		rw.Flush()
+	}
+
+}
+
+func MakeHost(port int, randomness io.Reader) (host.Host, error) {
+	// Creates a new RSA key pair for this host.
+	prvKey, _, err := crypto.GenerateKeyPairWithReader(crypto.RSA, 2048, randomness)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	// 0.0.0.0 will listen on any interface device.
+	// ipAddress := GetOutboundIP()
+	sourceMultiAddr, _ := multiaddr.NewMultiaddr(fmt.Sprintf("/ip4/127.0.0.1/tcp/%d", port))
+
+	fmt.Println("11111111")
+	fmt.Println(sourceMultiAddr)
+
+	// libp2p.New constructs a new libp2p Host.
+	// Other options can be added here.
+	return libp2p.New(
+		libp2p.ListenAddrs(sourceMultiAddr),
+		libp2p.Identity(prvKey),
+	)
+}
+
+func StartPeer(ctx context.Context, h host.Host, streamHandler network.StreamHandler, streamHandler2 network.StreamHandler) {
+	// Set a function as stream handler.
+	// This function is called when a peer connects, and starts a stream with this protocol.
+	// Only applies on the receiving side.
+	h.SetStreamHandler("/chat/1.0.0", streamHandler)
+	h.SetStreamHandler("/peerlist/1.0.0", streamHandler2)
+
+	// Let's get the actual TCP port from our listen multiaddr, in case we're using 0 (default; random available port).
+	var port string
+	for _, la := range h.Network().ListenAddresses() {
+		if p, err := la.ValueForProtocol(multiaddr.P_TCP); err == nil {
+			port = p
+			break
+		}
+	}
+
+	if port == "" {
+		log.Println("was not able to find actual local port")
+		return
+	}
+
+	log.Printf("Run './jumbochain.org.exe -d /ip4/127.0.0.1/tcp/%v/p2p/%s' on another console.\n", port, h.ID().Pretty())
+	log.Println("You can replace 127.0.0.1 with public IP as well.")
+	log.Println("Waiting for incoming connection")
+	log.Println()
+}
+
+func StartPeerAndConnect(ctx context.Context, h host.Host, destination string) (*bufio.ReadWriter, *bufio.ReadWriter, string, error) {
+	log.Println("This node's multiaddresses:")
+
+	for _, la := range h.Addrs() {
+		log.Printf(" - %v\n", la)
+	}
+	log.Println()
+
+	uniqueId := h.ID().Pretty()
+	multiAddressStr := h.Addrs()[0].String() + "/" + uniqueId
+
+	fmt.Println("multi address : ")
+	fmt.Println(multiAddressStr)
+
+	// Turn the destination into a multiaddr.
+	maddr, err := multiaddr.NewMultiaddr(destination)
+	if err != nil {
+		log.Println(err)
+		return nil, nil, "", err
+	}
+
+	// Extract the peer ID from the multiaddr.
+	info, err := peer.AddrInfoFromP2pAddr(maddr)
+	if err != nil {
+		log.Println(err)
+		return nil, nil, "", err
+	}
+
+	// Add the destination's peer multiaddress in the peerstore.
+	// This will be used during connection and stream creation by libp2p.
+	h.Peerstore().AddAddrs(info.ID, info.Addrs, peerstore.PermanentAddrTTL)
+
+	// Start a stream with the destination.
+	// Multiaddress of the destination peer is fetched from the peerstore using 'peerId'.
+	s, err := h.NewStream(context.Background(), info.ID, "/chat/1.0.0")
+	if err != nil {
+		log.Println(err)
+		return nil, nil, "", err
+	}
+	log.Println("Established connection to destination")
+
+	s2, err := h.NewStream(context.Background(), info.ID, "/peerlist/1.0.0")
+	if err != nil {
+		log.Println(err)
+		return nil, nil, "", err
+	}
+
+	// Create a buffered stream so that read and writes are non blocking.
+	rw := bufio.NewReadWriter(bufio.NewReader(s), bufio.NewWriter(s))
+
+	rw2 := bufio.NewReadWriter(bufio.NewReader(s2), bufio.NewWriter(s2))
+
+	return rw, rw2, multiAddressStr, nil
+}
