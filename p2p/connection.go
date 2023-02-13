@@ -132,6 +132,47 @@ func RunSender(ha host.Host, targetPeer string) peer.AddrInfo {
 
 func SendStream(ha host.Host, info peer.AddrInfo) {
 
+	trxs_inMemPool := temp.ReadCsv("TrxMemPool.csv")
+
+	for i := 0; i < len(trxs_inMemPool); i++ {
+
+		trx_details := trxs_inMemPool[i][0]
+
+		s, err := ha.NewStream(context.Background(), info.ID, "/echo/1.0.0")
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		// log.Println("sender saying hello")
+
+		// message := "ye hai message"
+
+		log.Println(trx_details)
+
+		_, err = s.Write([]byte(trx_details + "\n"))
+		fmt.Println(err)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		out, err := io.ReadAll(s)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		log.Printf("read reply: %q\n", out)
+
+	}
+
+	// do stuff
+
+}
+
+func SendStream1(ha host.Host, info peer.AddrInfo) {
+
 	ticker := time.NewTicker(10 * time.Second)
 	quit := make(chan struct{})
 	go func() {
