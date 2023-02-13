@@ -20,6 +20,7 @@ func main() {
 
 	fmt.Println("hi")
 	fmt.Println("hi")
+	fmt.Println("hi")
 
 	r := rand.Reader
 
