@@ -18,11 +18,6 @@ func main() {
 	sourcePort := flag.Int("sp", 0, "source port number")
 	flag.Parse()
 
-	fmt.Println("hi")
-	fmt.Println("hi")
-	fmt.Println("hi")
-	fmt.Println("pranveer")
-
 	r := rand.Reader
 
 	h, err := p2p.MakeHost(*sourcePort, r)
