@@ -19,6 +19,7 @@ func main() {
 	flag.Parse()
 
 	fmt.Println("hi")
+	fmt.Println("hi")
 
 	r := rand.Reader
 
